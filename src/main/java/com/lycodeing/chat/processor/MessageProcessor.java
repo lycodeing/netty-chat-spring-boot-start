@@ -10,5 +10,5 @@ import com.lycodeing.chat.handler.MessageHandler;
  */
 public interface MessageProcessor {
 
-    void processMessage(Message message, MessageHandlerRegistry registry);
+    void processMessage(Message message);
 }

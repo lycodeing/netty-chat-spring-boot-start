@@ -10,6 +10,8 @@ import com.lycodeing.chat.processor.MessageProcessor;
 import com.lycodeing.chat.properties.WebSocketProperties;
 import com.lycodeing.chat.service.OfflineMessageService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +20,7 @@ import org.springframework.context.annotation.Configuration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -27,7 +30,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @EnableConfigurationProperties(WebSocketProperties.class)
 public class NettyWebSocketAutoConfiguration {
 
-    private final static Logger logger = org.slf4j.LoggerFactory.getLogger(NettyWebSocketAutoConfiguration.class);
+    private final static Logger logger = LoggerFactory.getLogger(NettyWebSocketAutoConfiguration.class);
+
 
     @Bean
     @ConditionalOnMissingBean(MessageHandlerRegistry.class)
@@ -36,16 +40,15 @@ public class NettyWebSocketAutoConfiguration {
     }
 
 
-
     @Bean
     @ConditionalOnMissingBean(MessageProcessor.class)
     public MessageProcessor messageProcessor() {
-        return (message, registry) -> {
-            MessageHandler messageHandler = registry.getMessageHandler(message.getType());
+        return message -> {
+            MessageHandler messageHandler = defaultMessageHandlerRegistry().getMessageHandler(message.getTarget());
             if (messageHandler != null) {
                 messageHandler.handleMessage(message);
             } else {
-                logger.warn("message type:{} not found", message.getType());
+                logger.warn("message type:{} not found", message.getTarget());
             }
         };
     }
@@ -54,7 +57,7 @@ public class NettyWebSocketAutoConfiguration {
     @ConditionalOnMissingBean(MessageSenderService.class)
     public MessageSenderService messageSenderService(MessageHandlerRegistry registry) {
         return (recipientId, message) -> {
-            MessageHandler handler = registry.getMessageHandler(message.getType());
+            MessageHandler handler = registry.getMessageHandler(message.getTarget());
             if (handler != null) {
                 handler.sendMessage(recipientId, message);
             }
@@ -75,7 +78,17 @@ public class NettyWebSocketAutoConfiguration {
 
             @Override
             public List<Message> getOfflineMessages(String userId) {
-                return offlineMessages.remove(userId);
+                List<Message> messages = offlineMessages.get(userId);
+                if (messages == null || messages.isEmpty()) {
+                    logger.info("userId:{} offline message is empty", userId);
+                    return new ArrayList<>();
+                }
+                return messages;
+            }
+
+            @Override
+            public void removeOfflineMessage(String userId) {
+                offlineMessages.remove(userId);
             }
         };
     }
@@ -91,7 +104,7 @@ public class NettyWebSocketAutoConfiguration {
 
             @Override
             public String getUserIdFromToken(String token) {
-                return null;
+                return UUID.randomUUID().toString().replace("-", "");
             }
         };
     }
@@ -101,9 +114,8 @@ public class NettyWebSocketAutoConfiguration {
     @ConditionalOnMissingBean(NettyWebSocketServer.class)
     public NettyWebSocketServer nettyWebSocketServer(WebSocketProperties properties,
                                                      AuthenticationService authenticationService,
-                                                     MessageHandlerRegistry registry,
                                                      MessageProcessor messageProcessor,
                                                      OfflineMessageService offlineMessageService) {
-        return new NettyWebSocketServer(properties, authenticationService, registry, messageProcessor, offlineMessageService);
+        return new NettyWebSocketServer(properties, authenticationService, messageProcessor, offlineMessageService);
     }
 }

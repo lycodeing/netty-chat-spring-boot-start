@@ -1,6 +1,8 @@
 package com.lycodeing.chat.core;
 
 import io.netty.channel.Channel;
+import io.netty.util.AttributeKey;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -15,12 +17,16 @@ public class ConnectionManager {
      */
     private static final Map<String, Channel> CHANNEL_MAP = new ConcurrentHashMap<>();
 
+    // 定义一个 AttributeKey，用于存储 token 信息
+    private static final AttributeKey<String> TOKEN_KEY = AttributeKey.valueOf("token");
+
     /**
      * 注册一个新的连接。
      * @param id 连接的唯一标识符（例如用户 ID 或会话 ID）
      * @param channel Netty 的 Channel 对象
      */
     public static void register(String id, Channel channel) {
+        channel.attr(TOKEN_KEY).set(id);
         CHANNEL_MAP.put(id, channel);
     }
 
@@ -47,5 +53,12 @@ public class ConnectionManager {
      */
     public static Map<String, Channel> getAllChannels() {
         return new ConcurrentHashMap<>(CHANNEL_MAP);
+    }
+
+    /**
+     * 提供channel 获取key
+     */
+    public static String getKey(Channel channel) {
+        return channel.attr(TOKEN_KEY).get();
     }
 }

@@ -12,6 +12,12 @@ public class WebSocketProperties {
      * 端口
      */
     private int port = 8080;
+
+    /**
+     * 认证的参数名称
+     */
+    private String authParam = "token";
+
     /**
      * 端点
      */
@@ -30,6 +36,14 @@ public class WebSocketProperties {
      * worker线程数
      */
     private int workerThreadCount = 4;
+
+    public String getAuthParam() {
+        return authParam;
+    }
+
+    public void setAuthParam(String authParam) {
+        this.authParam = authParam;
+    }
 
     public int getBossThreadCount() {
         return bossThreadCount;

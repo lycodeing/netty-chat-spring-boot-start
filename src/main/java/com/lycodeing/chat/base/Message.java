@@ -8,13 +8,6 @@ import java.util.Map;
  */
 public class Message {
 
-
-    /**
-     * 消息类型，例如文本消息、红包消息等。
-     * {@link com.lycodeing.chat.enums.MessageTypeEnum}
-     */
-    private String type;
-
     /**
      * 消息发送者的用户ID。
      */
@@ -58,14 +51,6 @@ public class Message {
 
     public void setToken(String token) {
         this.token = token;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public String getFrom() {
@@ -225,14 +210,14 @@ public class Message {
     @Override
     public String toString() {
         return "Message{" +
-                "type='" + type + '\'' +
-                ", from='" + from + '\'' +
+                "from='" + from + '\'' +
                 ", to='" + to + '\'' +
                 ", target='" + target + '\'' +
                 ", content=" + content +
                 ", timestamp=" + timestamp +
                 ", messageId='" + messageId + '\'' +
                 ", metadata=" + metadata +
+                ", token='" + token + '\'' +
                 '}';
     }
 }
